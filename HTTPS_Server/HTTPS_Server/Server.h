@@ -1,7 +1,11 @@
 #pragma once
 #include "RequestManager.h"
+#include <fstream>
 #include <iostream>
 #include <Windows.h>
+#include <string>
+
+using namespace std;
 class Server
 {
 public:
