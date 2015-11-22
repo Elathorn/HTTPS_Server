@@ -1,5 +1,5 @@
 #pragma once
-#include "ProjectDefines.h"
+#include "RequestManager.h"
 #include <iostream>
 #include <Windows.h>
 class Server
@@ -12,11 +12,12 @@ private:
 	int _port;
 	struct MHD_Daemon * _daemon;
 
-	static int _requestHandler(void *cls, struct MHD_Connection *connection,
-		const char *url,
-		const char *method, const char *version,
-		const char *upload_data,
-		size_t *upload_data_size, void **con_cls);
+	char *_keyPem;
+	char *_certPem;
+
+	static long _getFileSize(const char *filename);
+	static char* _loadFile(const char *filename);
+
 public:
 	//magic numbers
 	const static int _ERROR = 1;

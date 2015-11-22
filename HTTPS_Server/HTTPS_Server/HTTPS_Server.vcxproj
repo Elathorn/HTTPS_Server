@@ -148,11 +148,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConnectionInfo.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RequestManager.cpp" />
     <ClCompile Include="Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConnectionInfo.h" />
     <ClInclude Include="ProjectDefines.h" />
+    <ClInclude Include="RequestManager.h" />
     <ClInclude Include="Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

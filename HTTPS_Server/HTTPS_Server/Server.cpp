@@ -12,40 +12,88 @@ Server::Server(int port)
 Server::~Server()
 {
 	MHD_stop_daemon(_daemon);
+//ssh	free(_keyPem);
+//ssh	free(_certPem);
 }
 
 int Server::start()
 {
-	_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, _port, NULL, NULL, &_requestHandler, NULL, MHD_OPTION_END);
+
+/* ssh	
+_keyPem = _loadFile(SERVERKEYFILE);
+	_certPem = _loadFile(SERVERCERTFILE);
+
+	if ((_keyPem == NULL) || (_certPem == NULL))
+	{
+		printf("The key/certificate files could not be read.\n");
+		return 1;
+	}
+	*/
+	_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, _port, NULL, NULL, &RequestManager::requestHandler, NULL, 
+		//ssh //MHD_OPTION_HTTPS_MEM_KEY, _keyPem, MHD_OPTION_HTTPS_MEM_CERT, _certPem, 
+		MHD_OPTION_NOTIFY_COMPLETED, &RequestManager::requestCompleted, NULL, MHD_OPTION_END); 
+	/*ssh
+	
+	_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, _port, NULL, NULL, &RequestManager::requestHandler, NULL, 
+		MHD_OPTION_HTTPS_MEM_KEY, _keyPem, MHD_OPTION_HTTPS_MEM_CERT, _certPem, 
+		MHD_OPTION_NOTIFY_COMPLETED, &RequestManager::requestCompleted, NULL, MHD_OPTION_END); */
 	//inicjalizujemy daemona i oczekujemy na requesty
 	if (NULL == _daemon) //jesli nie udalo sie zainicjalizowac daemona
 	{
+	//ssh	free(_keyPem);
+	//ssh	free(_certPem);
 		std::cerr << "Blad inicjalizacji daemona." << std::endl;
 		return _ERROR;
 	}
-	while (true)
-	{
-		//sleep(10000); //todo: sprawdzic czy jest to potrzebne
-	}
-	//todo: sprawdzic czy to potrzebne
-	MHD_stop_daemon(_daemon);
 }
 
-int Server::_requestHandler(void *cls, struct MHD_Connection *connection,
-	const char *url,
-	const char *method, const char *version,
-	const char *upload_data,
-	size_t *upload_data_size, void **con_cls)
+long Server::_getFileSize(const char *filename)
 {
-	struct MHD_Response *response;
-	int ret;
-	const char *page = "<html><body>Hello!</body></html>";
-	response = MHD_create_response_from_buffer(strlen(page), (void*)page, MHD_RESPMEM_PERSISTENT);
+	FILE *fp;
 
-	ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-	MHD_destroy_response(response);
-	return ret;
+	fp = fopen(filename, "rb");
+	if (fp)
+	{
+		long size;
 
+		if ((0 != fseek(fp, 0, SEEK_END)) || (-1 == (size = ftell(fp))))
+			size = 0;
 
+		fclose(fp);
 
+		return size;
+	}
+	else
+		return 0;
+}
+
+char * Server::_loadFile(const char * filename)
+{
+	FILE *fp;
+	char *buffer;
+	long size;
+
+	size = _getFileSize(filename);
+	if (size == 0)
+		return NULL;
+
+	fp = fopen(filename, "rb");
+	if (!fp)
+		return NULL;
+
+	buffer = (char*) malloc(size);
+	if (!buffer)
+	{
+		fclose(fp);
+		return NULL;
+	}
+
+	if (size != fread(buffer, 1, size, fp))
+	{
+		free(buffer);
+		buffer = NULL;
+	}
+
+	fclose(fp);
+	return buffer;
 }
